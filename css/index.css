@@ -1,0 +1,180 @@
+body {
+    -webkit-touch-callout:    none; /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none; /* prevent webkit from resizing text to fit */
+    -webkit-user-select:      none; /* prevent copy paste, to allow, change 'none' to 'text' */
+    background-color: #E4E4E4;
+    background-image: linear-gradient(top, #A7A7A7 0%, #E4E4E4 51%);
+    font-family: system-ui, -apple-system, -apple-system-font, 'Segoe UI', 'Roboto', sans-serif;
+    font-size: 1rem;
+    margin: 0px;
+    padding: 0px;
+
+    /* Padding to avoid the "unsafe" areas behind notches in the screen */
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-right, 0px);
+    margin-top: 2.5rem;
+}
+
+/* Portrait layout (default) */
+#app {
+    position: relative;
+    text-align: center;
+}
+
+.header {
+    background: #eee;
+    border-bottom: 1px solid #999;
+    position: fixed;
+    top:   0px;
+    left:  0px;
+    right: 0px;
+}
+
+.header_box {
+    display: inline-block;
+    float: left;
+    border-right: 1px outset #ccc;
+    padding: 0px 5px;
+}
+
+.header img {
+    height: 1.5rem;
+    padding: 3px;
+    position: relative;
+    display: inline;
+}
+
+h2 {
+    position: relative;
+    top: -8px;
+    display: inline;
+    margin: 0px;
+    padding: 0px;
+    font-size: 1.4rem;
+}
+
+.button {
+    border-radius: 1cm;
+    height: 1.5rem;
+    text-align: center;
+    margin: 0px;
+    padding: 0px 5px;
+    position: relative;
+    top: 5px;
+    left: 5px;
+    font-weight: bold;
+    cursor: pointer;
+
+    color: #999;
+    border: 3px solid #999;
+    box-shadow: 0px 0px 2px 1px #aaa;
+    background: #fff;
+    transition: background 0.3s, box-shadow 0.3s, border 0.3s, color 0.3s;
+}
+.button:hover {
+    color: #333;
+    border: 3px solid #bbb;
+    box-shadow: 0px 0px 2px 1px #bbb;
+    background: #ddd;
+}
+
+.main {
+    width: 100%;
+}
+
+.row {
+    background: #111;
+    border-bottom: 1px solid #4af;
+    color: #fff;
+    padding: 5px;
+    transition: background 0.3s;
+}
+.row:hover {
+    background: #09d;
+}
+.row span {
+    color: #ddd;
+    font-size: 0.7rem;
+}
+label.row {
+    display: block;
+    width: 100%;
+    margin: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+.row input[type="checkbox"] {
+    position: relative;
+    float: left;
+}
+
+.error {
+    color: red;
+}
+
+.footer {
+    background: #eee;
+    position: fixed;
+    bottom: 0px;
+    left:   0px;
+    right:  0px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+.footer table {
+    width: 100%;
+}
+.footer td {
+    cursor: pointer;
+    font-weight: bold;
+    color: #666;
+    width: 33%;
+    border: 1px solid #666;
+    padding: 5px 0px 10px 0px;
+}
+
+.settings {
+    margin: auto;
+}
+.settings th {
+    text-align: right;
+}
+.settings td {
+    padding-left: 5px;
+    text-align: left;
+}
+
+.backdrop {
+    position: fixed;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    background: rgba(0, 0, 0, 0.2);
+}
+.context {
+    background: #eee;
+    border: 1px solid #999;
+    margin: 1cm;
+}
+.context div {
+    border-top: 1px solid #333;
+    color: #000;
+    padding: 5px;
+    transition: background 0.3s;
+}
+.context .buttons {
+    background: #fff;
+    padding: 0px;
+    border-top-width: 0px;
+}
+.context .buttons div {
+    padding: 10px 5px;
+}
+/*
+.context .buttons div:hover {
+    background: #09d;
+}
+*/

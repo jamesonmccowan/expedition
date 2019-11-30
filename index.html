@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
+        <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+        <link rel="shortcut icon" href="img/logo.png" type="image/x-icon" />
+        <title>Cordova File Explorer</title>
+
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="lib/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript" src="lib/vue/vue.prod.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+
+        <link type="text/css" rel="stylesheet" href="css/index.css" />
+    </head>
+    <body>
+        <div id="app">
+            <div class="header">
+                <div class="header_box">
+                    <img src="img/logo.png" alt="Cordova Icon"
+                        v-on:click="home()"
+                    />
+                </div>
+                <button class="button"
+                    v-on:click="open({'name': 'root', 'path': 'file:///', 'dir': true})"
+                >Root</button>
+                &#160;
+                &#160;
+                <button class="button"
+                    v-on:click="mode = 'menu'"
+                >Menu</button>
+            </div>
+
+            <div class="main" v-bind:style="{'font-size': font_size + 'rem'}">
+                {{ path }}
+
+                <div v-if="mode == 'filter' || filter.length > 0">
+                    <input placeholder="Filter" v-model="filter" style="margin: auto; width: 90%;">
+                </div>
+
+                <div v-show="loading">Loading...</div>
+
+                <div class="error">{{ error_message }}</div>
+
+                <div v-if="mode != 'settings'">
+                    <div v-for="dir in base" v-if="filter == '' || dir.name.indexOf(filter) != -1">
+
+                        <label v-if="mode == 'select'" class="row">
+                            <input type="checkbox" v-model="dir.select">
+
+                            {{ dir.name }}<span v-if="dir.dir">/</span><br>
+
+                            <span v-if="show_path_detail"
+                                v-bind:style="{'font-size': font_size + 'rem'}"
+                            >({{ dir.path }})</span>
+                        </label>
+
+                        <div v-if="mode != 'select'"
+                            v-on:click="open(dir)"
+                            class="row"
+                            v-on:contextmenu="openMenu(event, dir)"
+                            v-on:touchstart="menuStart(event, dir)"
+                            v-on:touchend="menuStop(dir)"
+                            v-on:touchmove="menuMove(event)"
+                        >
+                            {{ dir.name }}<br>
+
+                            <span v-if="show_path_detail"
+                                v-bind:style="{'font-size': (font_size * 0.7) + 'rem'}"
+                            >({{ dir.path }})</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="mode == 'settings'">
+                    <table class="settings">
+                        <tr>
+                            <th>Details</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" v-model="show_path_detail">
+                                    Path
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Font Size</th>
+                            <td>
+                                <input type="number" min="0.1" step="0.1" v-model="font_size">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="footer">
+                <table>
+                    <tr v-if="mode == 'menu'">
+                        <td v-if="path.length > 0"
+                            v-on:click="mode = 'select'">
+                            Select
+                        </td>
+                        <td v-on:click="mode = 'filter'; filter = ''">
+                            Filter
+                        </td>
+                        <td v-if="path.length > 0"
+                            v-on:click="newFolder()"
+                        >
+                            New Folder
+                        </td>
+                    </tr>
+                    <tr v-if="mode == 'menu'">
+                        <td v-on:click="details()">
+                            Details
+                        </td>
+                        <td>
+                            Donate
+                        </td>
+                        <td v-on:click="mode = 'settings'">
+                            Settings
+                        </td>
+                    </tr>
+
+                    <tr v-if="mode == 'select'">
+                        <td v-on:click="select_all(true)">
+                            Select All
+                        </td>
+                        <td v-on:click="select_all(false)">
+                            Deselect All
+                        </td>
+                        <td>
+                            
+                        </td>
+                    </tr>
+                    <tr v-if="mode == 'select' && path.length > 0">
+                        <td>
+                            Copy
+                        </td>
+                        <td>
+                            Move
+                        </td>
+                        <td>
+                            Delete
+                        </td>
+                    </tr>
+
+                    <tr v-if="mode == 'move_to_dir'">
+                        <td v-on:click="move(selected)">
+                            Move "{{ selected.name }}" to "{{ path }}"
+                        </td>
+                    </tr>
+
+                    <tr v-if="mode == 'copy_to_dir'">
+                        <td v-on:click="copy(selected)">
+                            Copy "{{ selected.name }}" to "{{ path }}"
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="backdrop" v-if="show_context" v-on:click="show_context -= 1">
+                <div class="context" v-on:click="show_context += 1">
+                    <div>
+                        <b>{{ selected.name.substr(0, 50) }}</b>
+                    </div>
+
+                    <div class="buttons" v-if="mode == 'context'">
+                        <div v-on:click="open(selected)"                           >Open</div>
+                        <div v-on:click="details(selected)"                        >Details</div>
+                        <div v-on:click="rename(selected)"   v-if="path.length > 0">Rename</div>
+                        <div v-on:click="moveStart()"        v-if="path.length > 0">Move</div>
+                        <div v-on:click="copyStart()"        v-if="path.length > 0">Copy</div>
+                        <div v-on:click="remove(selected)"   v-if="path.length > 0">Delete</div>
+                        <div v-on:click="compress(selected)" v-if="path.length > 0">Compress</div>
+                        <div v-on:click="extract(selected)"  v-if="path.length > 0">Extract</div>
+                    </div>
+
+                    <table v-if="mode == 'details'">
+                        <tr>
+                            <th>Modification Time:</th>
+                            <td>{{ parseDatetime(details_obj.modificationTime) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Size:</th>
+                            <td>{{ parseFileSize(details_obj.size) }}</td>
+                        </tr>
+                        <tr v-if="details_obj.count > -1">
+                            <th>File Count:</th>
+                            <td>{{ details_obj.count }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
