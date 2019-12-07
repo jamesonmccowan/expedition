@@ -23,6 +23,11 @@
                     />
                 </div>
                 <button class="button"
+                    v-on:click="bookmarks()"
+                >Home</button>
+                &#160;
+                &#160;
+                <button class="button"
                     v-on:click="open({'name': 'root', 'path': 'file:///', 'dir': true})"
                 >Root</button>
                 &#160;
@@ -30,6 +35,11 @@
                 <button class="button"
                     v-on:click="mode = 'menu'"
                 >Menu</button>
+                <div style="float: right; padding-right: 10px;">
+                    <button class="button"
+                        v-on:click="mode = 'help'"
+                    >?</button>
+                </div>
             </div>
 
             <div class="main" v-bind:style="{'font-size': font_size + 'rem'}">
@@ -49,7 +59,7 @@
                         <label v-if="mode == 'select'" class="row">
                             <input type="checkbox" v-model="dir.select">
 
-                            {{ dir.name }}<span v-if="dir.dir">/</span><br>
+                            {{ dir.name + (dir.dir ? "/" : "") }<br>
 
                             <span v-if="show_path_detail"
                                 v-bind:style="{'font-size': font_size + 'rem'}"
@@ -64,12 +74,20 @@
                             v-on:touchend="menuStop(dir)"
                             v-on:touchmove="menuMove(event)"
                         >
-                            {{ dir.name }}<br>
+                            {{ dir.name + (dir.dir ? "/" : "") }}<br>
 
                             <span v-if="show_path_detail"
                                 v-bind:style="{'font-size': (font_size * 0.7) + 'rem'}"
                             >({{ dir.path }})</span>
                         </div>
+                    </div>
+                </div>
+
+                <div v-if="mode == 'help'">
+                    <div style="text-align: left;">
+                        <br>
+                        <h2>Help</h2><br>
+                        There is no help
                     </div>
                 </div>
 
@@ -88,6 +106,20 @@
                             <th>Font Size</th>
                             <td>
                                 <input type="number" min="0.1" step="0.1" v-model="font_size">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Sort</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" v-model="sort_dirs">
+                                    Separate Files and Folders
+                                </label>
+                                <br>
+                                <label>
+                                    <input type="checkbox" v-model="sort">
+                                    Alphabetically
+                                </label>
                             </td>
                         </tr>
                     </table>
@@ -129,34 +161,40 @@
                         <td v-on:click="select_all(false)">
                             Deselect All
                         </td>
-                        <td>
-                            
+                        <td v-on:click="toggle_selected()">
+                            Toggle Select
                         </td>
                     </tr>
                     <tr v-if="mode == 'select' && path.length > 0">
-                        <td>
+                        <td v-on:click="copyMoveStart('copy_to_dir')">
                             Copy
                         </td>
-                        <td>
+                        <td v-on:click="copyMoveStart('move_to_dir')">
                             Move
                         </td>
-                        <td>
+                        <td v-on:click="remove()">
                             Delete
                         </td>
                     </tr>
 
                     <tr v-if="mode == 'move_to_dir'">
-                        <td v-on:click="move(selected)">
-                            Move "{{ selected.name }}" to "{{ path }}"
+                        <td v-on:click="move()">
+                            Move "{{ select_text }}" to "{{ path }}"
                         </td>
                     </tr>
 
                     <tr v-if="mode == 'copy_to_dir'">
-                        <td v-on:click="copy(selected)">
-                            Copy "{{ selected.name }}" to "{{ path }}"
+                        <td v-on:click="copy()">
+                            Copy "{{ select_text }}" to "{{ path }}"
                         </td>
                     </tr>
                 </table>
+                <dir v-if="mode == 'copying'">
+                    Copying "{{ select_text }}"
+                </dir>
+                <dir v-if="mode == 'moving'">
+                    Moving "{{ select_text }}"
+                </dir>
             </div>
 
             <div class="backdrop" v-if="show_context" v-on:click="show_context -= 1">
@@ -166,14 +204,14 @@
                     </div>
 
                     <div class="buttons" v-if="mode == 'context'">
-                        <div v-on:click="open(selected)"                           >Open</div>
-                        <div v-on:click="details(selected)"                        >Details</div>
-                        <div v-on:click="rename(selected)"   v-if="path.length > 0">Rename</div>
-                        <div v-on:click="moveStart()"        v-if="path.length > 0">Move</div>
-                        <div v-on:click="copyStart()"        v-if="path.length > 0">Copy</div>
-                        <div v-on:click="remove(selected)"   v-if="path.length > 0">Delete</div>
-                        <div v-on:click="compress(selected)" v-if="path.length > 0">Compress</div>
-                        <div v-on:click="extract(selected)"  v-if="path.length > 0">Extract</div>
+                        <div v-on:click="open(selected)"                                     >Open</div>
+                        <div v-on:click="details(selected)"                                  >Details</div>
+                        <div v-on:click="rename(selected)"             v-if="path.length > 0">Rename</div>
+                        <div v-on:click="copyMoveStart('move_to_dir')" v-if="path.length > 0">Move</div>
+                        <div v-on:click="copyMoveStart('copy_to_dir')" v-if="path.length > 0">Copy</div>
+                        <div v-on:click="remove(selected)"             v-if="path.length > 0">Delete</div>
+                        <div v-on:click="compress(selected)"           v-if="path.length > 0">Compress</div>
+                        <div v-on:click="extract(selected)"            v-if="path.length > 0">Extract</div>
                     </div>
 
                     <table v-if="mode == 'details'">

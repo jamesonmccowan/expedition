@@ -1,0 +1,175 @@
+{
+    "home": [
+        {
+            "path": "file:///android_asset/",
+            "dir":  true,
+            "name": "applicationDirectory"
+        },
+        {
+            "path": "file:///data/data/__this_app__/",
+            "dir":  true,
+            "name": "applicationStorageDirectory"
+        },
+        {
+            "path": "file:///data/data/__this_app__/files/",
+            "dir":  true,
+            "name": "dataDirectory"
+        },
+        {
+            "path": "file:///data/data/__this_app__/cache/",
+            "dir":  true,
+            "name": "cacheDirectory"
+        },
+        {
+            "path": "file:///storage/emulated/0/Android/data/__this_app__/",
+            "dir":  true,
+            "name": "externalApplicationStorageDirectory"
+        },
+        {
+            "path": "file:///storage/emulated/0/Android/data/__this_app__/files/",
+            "dir":  true,
+            "name": "externalDataDirectory"
+        },
+        {
+            "path": "file:///storage/emulated/0/Android/data/__this_app__/cache/",
+            "dir":  true,
+            "name": "externalCacheDirectory"
+        },
+        {
+            "path": "file:///storage/emulated/0/",
+            "dir":  true,
+            "name": "externalRootDirectory"
+        }
+    ],
+    "base": [
+        {
+            "path": "file:///",
+            "dir":  true,
+            "name": "",
+            "get": [
+                {
+                    "path": "file:///android_asset/",
+                    "dir":  true,
+                    "name": "android_asset",
+                    "get": [
+                    ]
+                },
+                {
+                    "path": "file:///data/",
+                    "dir":  true,
+                    "name": "data",
+                    "get": [
+                        {
+                            "path": "file:///data/data/",
+                            "dir":  true,
+                            "name": "data",
+                            "get": [
+                                {
+                                    "path": "file:///data/data/__this_app__/",
+                                    "dir":  true,
+                                    "name": "__this_app__",
+                                    "get": [
+                                        {
+                                            "path": "file:///data/data/__this_app__/files/",
+                                            "dir":  true,
+                                            "name": "files"
+                                        },
+                                        {
+                                            "path": "file:///data/data/__this_app__/cache/",
+                                            "dir":  true,
+                                            "name": "cache"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "path": "file:///sdcard/",
+                    "dir":  true,
+                    "name": "sdcard",
+                    "get": [
+                        {
+                            "path": "file:///sdcard/Music/",
+                            "dir":  true,
+                            "name": "Music",
+                            "get": [
+                            ]
+                        },
+                        {
+                            "path": "file:///sdcard/Pictures/",
+                            "dir":  true,
+                            "name": "Pictures",
+                            "get": [
+                            ]
+                        },
+                        {
+                            "path": "file:///sdcard/Download/",
+                            "dir":  true,
+                            "name": "Download",
+                            "get": [
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "path": "file:///storage/",
+                    "dir":  true,
+                    "name": "storage",
+                    "get": [
+                        {
+                            "path": "file:///storage/emulated/",
+                            "dir":  true,
+                            "name": "emulated",
+                            "get": [
+                                {
+                                    "path": "file:///storage/emulated/0/",
+                                    "dir":  true,
+                                    "name": "0",
+                                    "get": [
+                                        {
+                                            "path": "file:///storage/emulated/0/Android/",
+                                            "dir":  true,
+                                            "name": "Android",
+                                            "get": [
+                                                {
+                                                    "path": "file:///storage/emulated/0/Android/data/",
+                                                    "dir":  true,
+                                                    "name": "data",
+                                                    "get": [
+                                                        {
+                                                            "path": "file:///storage/emulated/0/Android/data/__this_app__/",
+                                                            "dir":  true,
+                                                            "name": "__this_app__",
+                                                            "get": [
+                                                                {
+                                                                    "path": "file:///storage/emulated/0/Android/data/__this_app__/files/",
+                                                                    "dir":  true,
+                                                                    "name": "files",
+                                                                    "get": [
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "path": "file:///storage/emulated/0/Android/data/__this_app__/cache/",
+                                                                    "dir":  true,
+                                                                    "name": "cache",
+                                                                    "get": [
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

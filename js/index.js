@@ -6,81 +6,52 @@ $(function () {
             "path": "",
             "filter": "",
             "base": [],
+            "demo": {},
             "history": [],
             "position": {"x": 0, "y": 0},
+            "bookmark_list": [
+                {
+                    "dir": true,
+                    "name": "Root",
+                    "path": "file:///"
+                }
+            ],
 
             "loading": false,
             "error_message": "",
 
             "selected": {"name": ""},
             "multi_selected": [],
+            "select_text": "",
 
             "show_context": 0,
             "show_path_detail": true,
             "font_size": 1,
+            "sort": true,
+            "sort_dirs": true,
             "details_obj": {},
 
             "press_timer": 0,
         },
         "methods": {
             "home": function () {
-                var self = this;
-                var base = [];
-                this.base.map(function (b) { base.push(b); });
-                this.history.push({
-                    "path": this.path,
-                    "base": base,
-                });
-                this.base.splice(0, this.base.length);
+                this.history.push(this.path);
 
                 try {
+                    var files = [];
                     Object.keys(cordova.file).map(function (name) {
                         var path = cordova.file[name];
                         if (path) {
-                            self.base.push({
+                            files.push({
                                 "path": path,
                                 "dir":  true,
                                 "name": name,
                             });
                         }
                     });
+                    this.update_file_list(files, "");
                 } catch (e) {
-                    this.base = [{
-                        "path": "file:///android_asset/",
-                        "dir":  true,
-                        "name": "applicationDirectory",
-                    }, {
-                        "path": "file:///data/data/_this_app_/",
-                        "dir":  true,
-                        "name": "applicationStorageDirectory",
-                    }, {
-                        "path": "file:///data/data/_this_app_/files/",
-                        "dir":  true,
-                        "name": "dataDirectory",
-                    }, {
-                        "path": "file:///data/data/_this_app_/cache/",
-                        "dir":  true,
-                        "name": "cacheDirectory",
-                    }, {
-                        "path": "file:///storage/emulated/0/" +
-                            "Android/data/_this_app_/",
-                        "dir":  true,
-                        "name": "externalApplicationStorageDirectory",
-                    }, {
-                        "path": "file:///storage/emulated/0/" +
-                            "Android/data/_this_app_/files/",
-                        "dir":  true,
-                        "name": "externalDataDirectory",
-                    }, {
-                        "path": "file:///storage/emulated/0/" +
-                            "Android/data/_this_app_/cache/",
-                        "dir":  true,
-                        "name": "externalCacheDirectory",
-                    }, {
-                        "path": "file:///storage/emulated/0/",
-                        "dir":  true,
-                        "name": "externalRootDirectory",
-                    }];
+                    this.update_file_list(this.demo.home, "");
                 }
 
                 this.path = "";
@@ -88,42 +59,143 @@ $(function () {
                 this.error_message = "";
                 this.mode = "dir";
             },
-            "open": function (dir) {
+            "bookmarks": function () {
+                this.history.push(this.path);
+
+                this.update_file_list(this.bookmark_list, "");
+
+                this.path = "";
+                this.loading = false;
+                this.error_message = "";
+                this.mode = "dir";
+            },
+            "update_file_list": function (files, path, skip_history) {
+                var self = this;
+
+                if (this.sort) {
+                    files.sort(function (a, b) {
+                        return a.path > b.path;
+                    });
+                }
+                if (this.sort_dirs) {
+                    var dirs = files.filter(function (d) {
+                        return d.dir;
+                    });
+                    files.map(function (d) {
+                        if (!d.dir) {
+                            dirs.push(d);
+                        }
+                    });
+                    files = dirs;
+                }
+
+                // calculate parent directory
+                var parts = path.split("/");
+                parts.pop();
+                parts.pop();
+
+                // record current directory before moving to the next
+                if (!skip_history) {
+                    this.history.push(this.path);
+                }
+
+                // empty file list
+                while (this.base.length > 0) {
+                    this.base.pop();
+                }
+
+                // add parent directory reference
+                if (path != "" && path != "file:///") {
+                    var p = parts.join("/") + "/";
+                    this.base.push({
+                        "dir":  true,
+                        "path": p,
+                        "name": "..",
+                    });
+                }
+
+                // add files to file list
+                files.map(function (entry) {
+                    self.base.push(entry);
+                });
+
+                this.path = path;
+                this.loading = false;
+                this.$forceUpdate();
+            },
+            "compare_paths": function (path_a, path_b) {
+                var parts_a = path_a
+                    .substr("file:///".length).split("/");
+
+                var parts_b = path_b
+                    .substr("file:///".length).split("/");
+
+                var ret = {
+                    "match":         false,
+                    "partial_match": false, // smaller path if subpath
+                    "a":             path_a,
+                    "b":             path_b,
+                    "count":         0,
+                };
+
+                // if the paths are the same
+                if (path_a == path_b) {
+                    ret.match = true;
+                    ret.partial_match = path_a;
+                } else {
+
+                    // find how similar the two paths are
+                    parts_a.map(function (a, i) {
+                        if (ret.count == i && a == parts_b[i]) {
+                            ret.count++;
+                        }
+                    });
+
+                    // check that one path is a substring of the other
+                    if (ret.count == parts_a.length - 1) {
+                        ret.partial_match = path_a;
+                    } else if (ret.count == parts_b.length - 1) {
+                        ret.partial_match = path_b;
+                    }
+                }
+
+                // handle special case of one being the root dir
+                if (path_a == "file:///" || path_b == "file:///") {
+                    ret.partial_match = "file:///";
+                }
+
+                return ret;
+            },
+            "open": function (dir, skip_history) {
+                var path = dir.path;
                 var self = this;
                 if (!dir.dir) {
                     // if it's not a directory, open it as a file
                     // https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-inappbrowser/index.html
                     if (cordova && cordova.InAppBrowser.open) {
                         cordova.InAppBrowser.open(
-                            dir.path,
+                            path,
                             "_system"
                         );
                     }
                     return;
                 }
-                if (dir.name == ".." && dir.path == "") {
-                    this.home();
+                if (path == "") {
+                    this.bookmarks();
                     return;
                 }
 
-                // backup history
-                var base = [];
-                this.base.map(function (b) { base.push(b); });
-                this.history.push({
-                    "path": this.path,
-                    "base": base,
-                });
-
                 // get ready for new list of files/dirs
-                this.base.splice(0, this.base.length);
-                this.base.push({
-                    "dir":  true,
-                    "path": this.path,
-                    "name": "..",
-                });
-                this.loading = true;
+                if (this.path) {
+                    this.update_file_list([{
+                        "dir":  true,
+                        "path": this.path,
+                        "name": "..",
+                    }], this.path, true);
+                }
+                this.loading       = true;
                 this.error_message = "";
-                this.show_context = 0;
+                this.show_context  = 0;
 
                 if (
                     this.mode != "copy_to_dir" &&
@@ -132,65 +204,90 @@ $(function () {
                     this.mode = "dir";
                 }
 
+                // demo mode
                 if (!window.resolveLocalFileSystemURL) {
-                    this.loading = false;
-                    this.error_message =
-                        "File handling tools not loaded!";
+                    var folders = this.demo.base;
+                    var match = false;
 
-                    return false;
+                    while (!match) {
+                        folders = folders.filter(function (f) {
+                            var c = self.compare_paths(f.path, path);
+
+                            if (c.match) {
+                                match = f;
+                                return true;
+                            } else if (c.partial_match == f.path) {
+                                return true;
+                            }
+
+                            return false;
+                        });
+
+                        if (match) {
+                            this.update_file_list(
+                                match.get || [],
+                                match.path,
+                                skip_history
+                            );
+                        } else {
+                            if (folders.length > 0) {
+                                folders = folders[0].get;
+                            } else {
+                                this.error({"code": 5});
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
                 }
 
-                window.resolveLocalFileSystemURL(dir.path,
-                    function (fileSystem) {
-                        var reader = fileSystem.createReader();
-                        reader.readEntries(function (entries) {
-                            if (self.loading) {
-                                self.base.pop();
-                                if (dir.path !== "file:///") {
-                                    var parts = dir.path.split("/");
-                                    parts.pop();
-                                    parts.pop();
-                                    self.base.push({
-                                        "dir":  true,
-                                        "path": parts.join("/"),
-                                        "name": "..",
-                                    });
-                                }
-                                entries.map(function (entry) {
-                                    self.base.push({
-                                        "dir":  !entry.isFile,
-                                        "path": entry.nativeURL,
-                                        "name": entry.name,
-                                    });
-                                });
-                                self.path = dir.path;
-                                self.loading = false;
-                                self.$forceUpdate();
-                            }
-                        }, self.error);
-                    }, this.error);
+                // live mode, get directory
+                window.resolveLocalFileSystemURL(path, function (fs) {
+                    var reader = fs.createReader();
+                    reader.readEntries(function (entries) {
+                        if (self.loading) {
+                            var files = entries.map(function (f) {
+                                return {
+                                    "dir":  !f.isFile,
+                                    "path": f.nativeURL,
+                                    "name": f.name,
+                                };
+                            });
+
+                            self.update_file_list(
+                                files, path, skip_history
+                            );
+                            self.path = path;
+                            self.loading = false;
+                            self.$forceUpdate();
+                        }
+                    }, self.error);
+                }, this.error);
             },
             "error": function (err) {
                 this.loading = false;
-                this.error_message = err;
+                if (err && err.code == 5) {
+                    this.error_message = "Error: file not found";
+                } else {
+                    this.error_message = err;
+                }
             },
             "back": function () {
-                var self = this;
                 if (this.mode == "dir") {
                     if (this.history.length > 0) {
                         var h = this.history.pop();
-                        this.base.splice(0, this.base.length);
-                        h.base.map(function (b) {
-                            self.base.push(b);
-                        });
-                        this.path = h.path;
+                        this.open({
+                            "dir": true,
+                            "path": h,
+                            "name": "back",
+                        }, true);
                     }
-                    this.loading = false;
-                    this.error_message = "";
                 } else {
                     this.show_context = 0;
                     this.mode = "dir";
                 }
+
+                return false;
             },
             "menuStart": function(event, dir) {
                 var self = this;
@@ -200,6 +297,8 @@ $(function () {
                     self.openMenu(false, dir);
                 }, 1000);
             },
+            // used to prevent the menu from opening if
+            // the user is scrolling the screen
             "menuMove": function(event) {
                 var diffX = this.position.x - event.pageX;
                 var diffY = this.position.y - event.pageY;
@@ -207,7 +306,7 @@ $(function () {
                     diffX * diffX + diffY * diffY
                 );
 
-                if (distance >= 10) {
+                if (distance >= 5) {
                     this.menuStop();
                 }
             },
@@ -225,12 +324,11 @@ $(function () {
                 }
             },
             "refresh": function () {
-                this.base.pop();
                 this.open({
                     "name": "refresh",
                     "path": this.path,
                     "dir":  true,
-                });
+                }, true);
             },
             "select_all": function (select) {
                 // Checkboxes are only dispayed for mode == select.
@@ -245,6 +343,21 @@ $(function () {
 
                 this.mode = "select";
             },
+            "toggle_selected": function () {
+                // Checkboxes are only dispayed for mode == select.
+                // Switching to menu then back to select refreshes
+                // the checkboxes. Otherwise their state will be
+                // different from what is displayed.
+                this.mode = "menu";
+
+                this.base.map(function (dir) {
+                    dir.select = !dir.select;
+                });
+
+                this.mode = "select";
+            },
+
+            // list details of a specified file/folder
             "details": function (dir) {
                 var self = this;
                 var path  = this.path;
@@ -262,7 +375,7 @@ $(function () {
                         path, function (fileSystem) {
                             fileSystem.getMetadata(
                                 function (metadata) {
-                                    metadata.count   = count;
+                                    metadata.count    = count;
                                     self.mode         = "details";
                                     self.details_obj  = metadata;
                                     self.show_context = 1;
@@ -356,7 +469,7 @@ $(function () {
                             self.error
                         );
                     };
-                    
+
                     get_filesystem(dir.path, function (file) {
                         get_filesystem(self.path, function (par) {
                             rename(file, par, name);
@@ -365,14 +478,41 @@ $(function () {
                 }
                 this.show_context = 0;
             },
-            "moveStart": function () {
-                this.mode = "move_to_dir";
-                this.show_context = 0;
-            },
-            "move": function (dir) {
+            "copyMoveStart": function (copy_or_move) {
                 var self = this;
 
-                var move = function (file, to) {
+                if (this.mode == "select") {
+                    this.multi_selected
+                        .splice(0, this.multi_selected.length);
+
+                    this.base.map(function (dir) {
+                        if (dir.select) {
+                            self.multi_selected.push(dir);
+                        }
+                    });
+
+                    if (this.multi_selected.length > 0) {
+                        this.selected = this.multi_selected[0];
+                        this.select_text = "files";
+                    } else { // nothing to copy/move
+                        this.mode = "dir";
+                        this.show_context = 0;
+                        return;
+                    }
+                } else {
+                    this.multi_selected = [this.selected];
+                    this.select_text = this.selected.name;
+                }
+                this.mode = copy_or_move;
+                this.show_context = 0;
+            },
+            "move": function () {
+                var self = this;
+
+                var dirs = this.multi_selected;
+
+                var move = function (file, to, dir) {
+                    self.select_text = dir.name;
                     file.moveTo(to, dir.name,
                         function () {
                             self.refresh();
@@ -390,23 +530,29 @@ $(function () {
                         self.error
                     );
                 };
-                
-                get_filesystem(dir.path, function (file) {
-                    get_filesystem(self.path, function (par) {
-                        move(file, par);
+
+                var count = dirs.length;
+                dirs.map(function (dir) {
+                    get_filesystem(dir.path, function (file) {
+                        get_filesystem(self.path, function (par) {
+                            move(file, par, dir);
+                            count--;
+                            if (count == 0) {
+                                self.mode = "dir";
+                            }
+                        });
                     });
                 });
-                this.mode = "dir";
+                this.mode = "moving";
                 this.show_context = 0;
             },
-            "copyStart": function () {
-                this.mode = "copy_to_dir";
-                this.show_context = 0;
-            },
-            "copy": function (dir) {
+            "copy": function () {
                 var self = this;
 
-                var copy = function (file, to) {
+                var dirs = this.multi_selected;
+
+                var copy = function (file, to, dir) {
+                    self.select_text = dir.name;
                     file.copyTo(to, dir.name,
                         function () {
                             self.refresh();
@@ -424,40 +570,64 @@ $(function () {
                         self.error
                     );
                 };
-                
-                get_filesystem(dir.path, function (file) {
-                    get_filesystem(self.path, function (par) {
-                        copy(file, par);
+
+                var count = dirs.length;
+                dirs.map(function (dir) {
+                    self.selected = dir;
+                    get_filesystem(dir.path, function (file) {
+                        get_filesystem(self.path, function (par) {
+                            copy(file, par, dir);
+                            count--;
+                            if (count == 0) {
+                                self.mode = "dir";
+                            }
+                        });
                     });
                 });
-                this.mode = "dir";
+                this.mode = "copying";
                 this.show_context = 0;
             },
             "remove": function (dir) {
                 var self = this;
-                if (confirm("Delete \"" + dir.name + "\"?")) {
-                    window.resolveLocalFileSystemURL(dir.path,
-                        function (fileSystem) {
-                            var success = function () {
-                                self.refresh();
-                            };
-                            var failure = function (err) {
-                                self.error(err);
-                            };
 
-                            if (dir.dir) {
-                                fileSystem.removeRecursively(
-                                    success, failure
-                                );
-                            } else {
-                                fileSystem.remove(
-                                    success, failure
-                                );
-                            }
+                var dirs = [];
+                if (dir) {
+                    dirs.push(dir);
+                } else {
+                    this.base.map(function (dir) {
+                        if (dir.select) {
+                            dirs.push(dir);
                         }
-                    );
-
+                    });
                 }
+
+                dirs.map(function (dir) {
+                    self.selected = dir;
+                    if (confirm("Delete \"" + dir.name + "\"?")) {
+                        window.resolveLocalFileSystemURL(dir.path,
+                            function (fileSystem) {
+                                var success = function () {
+                                    self.refresh();
+                                };
+                                var failure = function (err) {
+                                    self.error(err);
+                                };
+
+                                if (dir.dir) {
+                                    fileSystem.removeRecursively(
+                                        success, failure
+                                    );
+                                } else {
+                                    fileSystem.remove(
+                                        success, failure
+                                    );
+                                }
+                            }
+                        );
+
+                    }
+                });
+
                 this.mode = "dir";
                 this.show_context = 0;
             },
@@ -475,7 +645,7 @@ $(function () {
     });
     window.app = app;
 
-    document.addEventListener("backbutton", function (e) { 
+    document.addEventListener("backbutton", function (e) {
         e.preventDefault();
         app.back();
     }, false);
@@ -495,4 +665,9 @@ $(function () {
         });
         app.history.pop();
     }, false);
+
+    $.get("js/demo.json", function (data) {
+        app.demo.home = data.home;
+        app.demo.base = data.base;
+    });
 });

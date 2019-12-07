@@ -87,6 +87,7 @@ h2 {
     color: #fff;
     padding: 5px;
     transition: background 0.3s;
+    word-break: break-all;
 }
 .row:hover {
     background: #09d;
