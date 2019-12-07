@@ -34,7 +34,7 @@ $(function () {
             "press_timer": 0,
         },
         "methods": {
-            "home": function () {
+            "cordova": function (skip_history) {
                 this.history.push(this.path);
 
                 try {
@@ -49,25 +49,44 @@ $(function () {
                             });
                         }
                     });
-                    this.update_file_list(files, "");
+                    this.update_file_list(
+                        files, "Cordova", skip_history
+                    );
                 } catch (e) {
-                    this.update_file_list(this.demo.home, "");
+                    this.update_file_list(
+                        this.demo.home, "Cordova", skip_history
+                    );
                 }
 
-                this.path = "";
                 this.loading = false;
                 this.error_message = "";
                 this.mode = "dir";
             },
-            "bookmarks": function () {
+            "home": function (skip_history) {
                 this.history.push(this.path);
 
-                this.update_file_list(this.bookmark_list, "");
+                this.update_file_list(
+                    this.bookmark_list, "Home", skip_history
+                );
 
-                this.path = "";
                 this.loading = false;
                 this.error_message = "";
                 this.mode = "dir";
+            },
+            "add_bookmark": function () {
+                var name = prompt(
+                    "Creat New Bookmark", this.selected.name
+                );
+
+                if (name) {
+                    this.bookmark_list.push({
+                        "dir": true,
+                        "name": name,
+                        "path": this.selected.path
+                    });
+                    this.show_context = 0;
+                    this.mode = "dir";
+                }
             },
             "update_file_list": function (files, path, skip_history) {
                 var self = this;
@@ -105,7 +124,7 @@ $(function () {
                 }
 
                 // add parent directory reference
-                if (path != "" && path != "file:///") {
+                if (path.match(/^file:\/\/\/./)) {
                     var p = parts.join("/") + "/";
                     this.base.push({
                         "dir":  true,
@@ -276,11 +295,18 @@ $(function () {
                 if (this.mode == "dir") {
                     if (this.history.length > 0) {
                         var h = this.history.pop();
-                        this.open({
-                            "dir": true,
-                            "path": h,
-                            "name": "back",
-                        }, true);
+
+                        if (h == "Home") {
+                            this.home();
+                        } else if (h == "Cordova") {
+                            this.cordova();
+                        } else {
+                            this.open({
+                                "dir": true,
+                                "path": h,
+                                "name": "back",
+                            }, true);
+                        }
                     }
                 } else {
                     this.show_context = 0;

@@ -19,11 +19,11 @@
             <div class="header">
                 <div class="header_box">
                     <img src="img/logo.png" alt="Cordova Icon"
-                        v-on:click="home()"
+                        v-on:click="cordova()"
                     />
                 </div>
                 <button class="button"
-                    v-on:click="bookmarks()"
+                    v-on:click="home()"
                 >Home</button>
                 &#160;
                 &#160;
@@ -212,6 +212,7 @@
                         <div v-on:click="remove(selected)"             v-if="path.length > 0">Delete</div>
                         <div v-on:click="compress(selected)"           v-if="path.length > 0">Compress</div>
                         <div v-on:click="extract(selected)"            v-if="path.length > 0">Extract</div>
+                        <div v-on:click="add_bookmark(selected.path)"  v-if="path.length > 0">Bookmark</div>
                     </div>
 
                     <table v-if="mode == 'details'">
