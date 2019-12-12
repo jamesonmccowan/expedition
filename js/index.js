@@ -25,6 +25,7 @@ $(function () {
             "select_text": "",
 
             "show_context": 0,
+            "compressing": "",
             "show_path_detail": true,
             "font_size": 1,
             "sort": true,
@@ -280,8 +281,14 @@ $(function () {
                             self.loading = false;
                             self.$forceUpdate();
                         }
-                    }, self.error);
-                }, this.error);
+                    },
+                    function (e) {
+                        self.error(e);
+                    });
+                },
+                function (e) {
+                    self.error(e);
+                });
             },
             "error": function (err) {
                 this.loading = false;
@@ -463,12 +470,14 @@ $(function () {
                                 function () {
                                     self.refresh();
                                 },
-                                function (err) {
-                                    self.error(err);
+                                function (e) {
+                                    self.error(e);
                                 }
                             );
                         },
-                        this.error
+                        function (e) {
+                            self.error(e);
+                        }
                     );
                 }
             },
@@ -492,7 +501,9 @@ $(function () {
                         window.resolveLocalFileSystemURL(
                             path,
                             callback,
-                            self.error
+                            function (e) {
+                                self.error(e);
+                            }
                         );
                     };
 
@@ -543,8 +554,8 @@ $(function () {
                         function () {
                             self.refresh();
                         },
-                        function (err) {
-                            self.error(err);
+                        function (e) {
+                            self.error(e);
                         }
                     );
                 };
@@ -553,7 +564,9 @@ $(function () {
                     window.resolveLocalFileSystemURL(
                         path,
                         callback,
-                        self.error
+                        function (e) {
+                            self.error(e);
+                        }
                     );
                 };
 
@@ -583,8 +596,8 @@ $(function () {
                         function () {
                             self.refresh();
                         },
-                        function (err) {
-                            self.error(err);
+                        function (e) {
+                            self.error(e);
                         }
                     );
                 };
@@ -593,7 +606,9 @@ $(function () {
                     window.resolveLocalFileSystemURL(
                         path,
                         callback,
-                        self.error
+                        function (e) {
+                            self.error(e);
+                        }
                     );
                 };
 
@@ -635,8 +650,8 @@ $(function () {
                                 var success = function () {
                                     self.refresh();
                                 };
-                                var failure = function (err) {
-                                    self.error(err);
+                                var failure = function (e) {
+                                    self.error(e);
                                 };
 
                                 if (dir.dir) {
@@ -657,12 +672,250 @@ $(function () {
                 this.mode = "dir";
                 this.show_context = 0;
             },
-            /*
-            "compress": function (dir) {
+            "compress": function () {
                 var self = this;
-                this.show_context = 0;
+                var zip  = new JSZip();
+                var name = prompt(
+                    "Choose a name for zip archive of \"" +
+                    this.selected.name + "\"",
+                    this.selected.name + ".zip"
+                );
+                var count = 0;
+                var building = true;
+
+                function buildZip(dir, zip, finish) {
+                    count++;
+                    var path     = dir.path
+                    var subpath  = path.substr(self.path.length);
+                    var parts    = path.split("/");
+                    var filename = dir.name;
+                    parts.pop();
+                    var dirName  = parts.join("/");
+
+                    if (!dir.dir) {
+						loadFile(
+                            dirName,
+                            filename,
+                            function (data) {
+                                self.compressing = filename;
+                                zip.file(
+                                    decodeURIComponent(subpath),
+                                    data,
+                                    {"binary": true}
+                                );
+                                count--;
+                                if (count == 0 && !building) {
+                                    finish();
+                                }
+                            }
+                        );
+                    } else {
+                        zip.folder(decodeURIComponent(subpath));
+                        getDirFiles(path, function (subdirs) {
+                            subdirs.map(function (subdir) {
+                                self.compressing = filename;
+                                buildZip(subdir, zip, finish);
+                            });
+
+                            count--;
+
+                            if (subdirs.length == 0 &&
+                                (count == 0 && !building)
+                            ) {
+                                finish();
+                            }
+                        });
+                    }
+                }
+
+                function getDirFiles(path, callback) {
+                    window.resolveLocalFileSystemURL(
+                        path,
+                        function (fs) {
+                            var reader = fs.createReader();
+                            reader.readEntries(function (files) {
+                                callback(files.map(function (f) {
+                                    return {
+                                        "dir":  !f.isFile,
+                                        "path": f.nativeURL,
+                                        "name": f.name,
+                                    };
+                                }));
+                            },
+                            function (e) {
+                                self.error(e);
+                            });
+                        },
+                        function (e) {
+                            self.error(e);
+                        }
+                    );
+                }
+
+                function getDir(dirName, callback) {
+                    window.resolveLocalFileSystemURL(
+                        dirName,
+                        callback,
+                        function (e) {
+                            self.error(e)
+                        }
+                    );
+                }
+
+                function getFile(dir, filename, callback) {
+                    dir.getFile(
+                        filename,
+                        {"create": true, "exclusive": false},
+                        callback,
+                        function (e) {
+                            self.error(e)
+                        }
+                    );
+                }
+
+                function writeFile(file, blob, callback) {
+                    file.createWriter(function (writer) {
+                        writer.write(blob);
+                        callback();
+                    }, function (e) {
+                        self.error(e)
+                    });
+                }
+
+                function readFile(fileEntry, callback) {
+                    fileEntry.file(function (file) {
+                        var reader = new FileReader();
+                        reader.onloadend = function (evt) {
+                            callback(evt.target.result);
+                        };
+                        reader.readAsBinaryString(file);
+                    }, function (e) {
+                        self.error(e)
+                    });
+                }
+
+                function saveFile(blob, dirName, filename, callback) {
+                    getDir(dirName, function (dir) {
+                        getFile(dir, filename, function (file) {
+                            writeFile(file, blob, function () {
+                                callback();
+                                // do something after saving
+                            });
+                        });
+                    });
+                }
+
+                function loadFile(dirName, filename, callback) {
+                    getDir(dirName, function (dir) {
+                        getFile(dir, filename, function (file) {
+                            readFile(file, callback);
+                        });
+                    });
+                }
+
+                function finish () {
+                    if (!finished) {
+                        finished = true;
+                        zip.generateAsync({"type": "blob"})
+                            .then(function (blob) {
+                                saveFile(
+                                    blob,
+                                    self.path,
+                                    name,
+                                    function () {
+                                        alert(
+                                            "Finished creating \"" +
+                                            name +
+                                            "\"!"
+                                        );
+                                        self.show_context = 0;
+                                        self.refresh();
+                                    }
+                                );
+                            });
+                    }
+                }
+
+                if (name) {
+                    var finished = false;
+                    this.mode = "compressing";
+                    this.compressing = name;
+
+                    buildZip(this.selected, zip, finish);
+                    building = false;
+                    if (count == 0 && !finished) {
+                        finish();
+                    }
+                } else {
+                    this.show_context = 0;
+                }
             },
+            /*
             "extract": function (dir) {
+function load_zip(then) {
+    var file = document.createElement("input");
+    file.type="file";
+    file.style.display = "none";
+    file.addEventListener("change", function () {
+        var file_to_load = this.files[0];
+        var file_reader = new FileReader();
+        file_reader.onload = function () {
+            then(file_reader.result);
+        };
+        file_reader.readAsArrayBuffer(file_to_load);
+        this.parentNode.removeChild(this);
+        window.app.status = "Loading File";
+    }, false);
+    document.body.appendChild(file);
+    file.click();
+}
+            "import_zip": function () {
+                load_zip(function (data) {
+                    window.app.status = "File loaded, processing";
+                    var promise = JSZip.loadAsync(data);
+                    promise.then(function (zip) {
+                        window.app.status = "Zip file processed successfully!";
+                        var tree = {"data": {}};
+                        try {
+                            var keys = Object.keys(zip.files)
+                                .sort(function (a, b) {
+                                    var ret = false;
+                                    if (a.charAt(a.length - 1) === "/" &&
+                                        b.charAt(b.length - 1) === "/") {
+                                        ret = a > b;
+                                    } else {
+                                        if (a.charAt(a.length - 1) === "/" &&
+                                            b.charAt(b.length - 1) !== "/") {
+                                            ret = false;
+                                        } else if (a.charAt(a.length - 1) !== "/" &&
+                                                   b.charAt(b.length - 1) === "/") {
+                                            ret = true;
+                                        } else {
+                                            ret = a > b;
+                                        }
+                                    }
+                                    return ret;
+                                });
+
+                            keys.map(function (key) {
+                                var path = zip.files[key].name.split("/");
+                                if (path[path.length - 1] === "") {
+                                    path.pop();
+                                }
+                                place_item(tree.data, zip.files[key], path);
+                            });
+                        } catch (e) {
+                            console.log("error", e);
+                            window.app.status = "error: " + e;
+                        }
+                        app.tree = tree;
+                    }, function (e) {
+                        console.log(e);
+                        window.app.status = "Failed to process Zip file (was that a zip file?)";
+                    });
+                });
+            },
+
                 var self = this;
                 this.show_context = 0;
             },

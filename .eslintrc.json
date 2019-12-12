@@ -12,7 +12,8 @@
         "SharedArrayBuffer": "readonly",
         "Vue": true,
         "$": true,
-        "cordova": true
+        "cordova": true,
+        "JSZip": true
     },
     "parserOptions": {
         "ecmaVersion": 2018,

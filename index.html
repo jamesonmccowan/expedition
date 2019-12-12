@@ -10,6 +10,7 @@
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="lib/jquery-3.3.1.min.js"></script>
         <script type="text/javascript" src="lib/vue/vue.prod.js"></script>
+        <script type="text/javascript" src="lib/jszip.min.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
 
         <link type="text/css" rel="stylesheet" href="css/index.css" />
@@ -44,10 +45,6 @@
 
             <div class="main" v-bind:style="{'font-size': font_size + 'rem'}">
                 {{ path }}
-
-                <div v-if="mode == 'filter' || filter.length > 0">
-                    <input placeholder="Filter" v-model="filter" style="margin: auto; width: 90%;">
-                </div>
 
                 <div v-show="loading">Loading...</div>
 
@@ -127,6 +124,10 @@
             </div>
 
             <div class="footer">
+                <div v-if="mode == 'filter' || filter.length > 0">
+                    <input placeholder="Filter" v-model="filter" style="margin: auto; width: 90%;">
+                </div>
+
                 <table>
                     <tr v-if="mode == 'menu'">
                         <td v-if="path.length > 0"
@@ -213,6 +214,11 @@
                         <div v-on:click="compress(selected)"           v-if="path.length > 0">Compress</div>
                         <div v-on:click="extract(selected)"            v-if="path.length > 0">Extract</div>
                         <div v-on:click="add_bookmark(selected.path)"  v-if="path.length > 0">Bookmark</div>
+                    </div>
+
+                    <div v-if="mode == 'compressing'">
+                        Compressing...
+                        {{ compressing }}
                     </div>
 
                     <table v-if="mode == 'details'">
