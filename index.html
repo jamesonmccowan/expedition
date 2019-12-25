@@ -212,12 +212,17 @@
                         <div v-on:click="copyMoveStart('copy_to_dir')" v-if="path.length > 0">Copy</div>
                         <div v-on:click="remove(selected)"             v-if="path.length > 0">Delete</div>
                         <div v-on:click="compress(selected)"           v-if="path.length > 0">Compress</div>
-                        <div v-on:click="extract(selected)"            v-if="path.length > 0">Extract</div>
+                        <div v-on:click="extract(selected)"            v-if="path.length > 0 && !selected.dir">Extract</div>
                         <div v-on:click="add_bookmark(selected.path)"  v-if="path.length > 0">Bookmark</div>
                     </div>
 
                     <div v-if="mode == 'compressing'">
                         Compressing...
+                        {{ compressing }}
+                    </div>
+
+                    <div v-if="mode == 'extracting'">
+                        Extracting...
                         {{ compressing }}
                     </div>
 
