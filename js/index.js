@@ -914,6 +914,57 @@ $(function () {
                     );
                 }
 
+                function makeDir(dirName, callback) {
+                    var parts = dirName.split("/");
+
+                    parts.pop();
+                    var name = parts.pop() + "/";
+
+                    var parentName = parts.join("/") + "/";
+
+                    getDir(parentName, function (dir) {
+                        dir.getDirectory(
+                            name,
+                            {"create": true, "exclusive": false},
+                            function (dir) {
+                                callback(dir);
+                            },
+                            function (e) {
+                                self.error(e)
+                            }
+                        );
+                    });
+                }
+
+                function makeListOfDirs(list, callback) {
+                    var count = list.length;
+                    var path = self.path;
+
+                    if (count == 0) {
+                        callback();
+                    }
+
+                    list.map(function (subpath) {
+                        makeDir(
+                            path + subpath,
+                            function () {
+                                count--;
+                                if (count == 0) {
+                                    callback();
+                                }
+                            },
+                            function (e) {
+                                alert(
+                                    "Error while making dir \"" +
+                                    subpath +
+                                    "\""
+                                );
+                                self.error(e)
+                            }
+                        );
+                    });
+                }
+
                 function getFile(dir, filename, callback) {
                     dir.getFile(
                         filename,
@@ -969,16 +1020,36 @@ $(function () {
                     var filepath = self.path + zipName;
 
                     var parts = filepath.split("/");
-                    parts.pop();
-
+                    var name = parts.pop();
                     var dirName = parts.join("/");
 
                     getDir(dirName, function (dir) {
-                        getFile(dir, zipName, function (file) {
+                        getFile(dir, name, function (file) {
                             writeFile(file, blob, function () {
                                 callback();
                             });
                         });
+                    });
+                }
+
+                function saveZipFiles(zip, fileList, callback) {
+                    var count = fileList.length;
+
+                    if (count == 0) {
+                        callback();
+                    }
+
+                    fileList.map(function (filename) {
+                        zip.files[filename].async("blob")
+                            .then(function (value) {
+                                self.compressing = filename;
+                                saveFile(value, filename, function () {
+                                    count--;
+                                    if (count == 0) {
+                                        callback();
+                                    }
+                                });
+                            });
                     });
                 }
 
@@ -988,7 +1059,7 @@ $(function () {
                         a.charAt(a.length - 1) === "/" &&
                         b.charAt(b.length - 1) === "/"
                     ) {
-                        ret = a > b;
+                        ret = a < b;
                     } else {
                         if (
                             a.charAt(a.length - 1) === "/" &&
@@ -1001,7 +1072,7 @@ $(function () {
                         ) {
                             ret = true;
                         } else {
-                            ret = a > b;
+                            ret = a < b;
                         }
                     }
                     return ret;
@@ -1012,28 +1083,16 @@ $(function () {
                         var keys = Object.keys(zip.files)
                             .sort(fileSort);
 
+                        var dirs = keys.filter(function (key) {
+                            return key.charAt(key.length - 1) === "/";
+                        });
+
                         keys = keys.filter(function (key) {
                             return key.charAt(key.length - 1) !== "/";
                         });
 
-
-                        var count = keys.length;
-                        if (count == 0) {
-                            callback();
-                        }
-
-                        keys.map(function (key) {
-                            zip.files[key].async("string")
-                                .then(function (value) {
-                                    blob = value; // new Blob(value);
-                                    self.compressing = key;
-                                    saveFile(blob, key, function () {
-                                        count--;
-                                        if (count == 0) {
-                                            callback();
-                                        }
-                                    });
-                                });
+                        makeListOfDirs(dirs, function () {
+                            saveZipFiles(zip, keys, callback);
                         });
                     });
                 }
