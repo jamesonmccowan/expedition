@@ -10,6 +10,9 @@
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="lib/jquery-3.3.1.min.js"></script>
         <script type="text/javascript" src="lib/vue/vue.prod.js"></script>
+        <script type="text/javascript" src="lib/vue/Sortable.min.js"></script>
+        <script type="text/javascript" src="lib/vue/vuedraggable.umd.min.js"></script>
+
         <script type="text/javascript" src="lib/jszip.min.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
 
@@ -121,7 +124,25 @@
                                 </label>
                             </td>
                         </tr>
-                    </table>
+                    </table><br>
+
+                    <b>Bookmarks</b><br>
+                    <sub>(drag to sort)</sub>
+                    <draggable
+                        v-model="bookmark_list"
+                        @end="save_config()"
+                    >
+                       <div
+                           v-for="(item, index) in bookmark_list"
+                           :key="item.path"
+                           class="bookmark"
+                       >
+                           <button v-on:click="remove_bookmark(index)">X</button>
+                           <button v-on:click="rename_bookmark(index)">Rename</button>
+                           {{ item.name }}<br>
+                           <sub>{{ item.path }}</sub>
+                       </div>
+                    </draggable>
                 </div>
             </div>
 

@@ -179,3 +179,14 @@ table {
     background: #09d;
 }
 */
+
+.bookmark {
+    border-radius: 5px;
+    background: #fff;
+    margin: 1px 5%;
+}
+
+.bookmark button {
+    position: relative;
+    float: right;
+}

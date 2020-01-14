@@ -127,6 +127,24 @@ $(function () {
                     this.mode = "dir";
                 }
             },
+            "rename_bookmark": function (index) {
+                var name = prompt(
+                    "Creat New Bookmark",
+                    this.bookmark_list[index].name
+                );
+
+                if (name) {
+                    this.bookmark_list[index].name = name;
+                    this.save_config();
+                }
+            },
+            "remove_bookmark": function (index) {
+                var name = this.bookmark_list[index].name;
+                if (confirm("remove bookmark \"" + name + "\"?")) {
+                    this.bookmark_list.splice(index, 1);
+                    this.save_config();
+                }
+            },
             "update_file_list": function (
                 files, path, skip_history, skip_sort
             ) {
