@@ -36,11 +36,13 @@
                 <button class="button"
                     v-on:click="mode = 'menu'"
                 >Menu</button>
+                <!--
                 <div style="float: right; padding-right: 10px;">
                     <button class="button"
                         v-on:click="mode = 'help'"
                     >?</button>
                 </div>
+                -->
             </div>
 
             <div class="main" v-bind:style="{'font-size': font_size + 'rem'}">
@@ -94,7 +96,7 @@
                             <th>Details</th>
                             <td>
                                 <label>
-                                    <input type="checkbox" v-model="show_path_detail">
+                                    <input type="checkbox" v-model="show_path_detail" v-on:change="save_config()">
                                     Path
                                 </label>
                             </td>
@@ -102,19 +104,19 @@
                         <tr>
                             <th>Font Size</th>
                             <td>
-                                <input type="number" min="0.1" step="0.1" v-model="font_size">
+                                <input type="number" min="0.1" step="0.1" v-model="font_size" v-on:change="save_config()">
                             </td>
                         </tr>
                         <tr>
                             <th>Sort</th>
                             <td>
                                 <label>
-                                    <input type="checkbox" v-model="sort_dirs">
+                                    <input type="checkbox" v-model="sort_dirs" v-on:change="save_config()">
                                     Separate Files and Folders
                                 </label>
                                 <br>
                                 <label>
-                                    <input type="checkbox" v-model="sort">
+                                    <input type="checkbox" v-model="sort" v-on:change="save_config()">
                                     Alphabetically
                                 </label>
                             </td>

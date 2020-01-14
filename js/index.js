@@ -12,6 +12,36 @@ $(function () {
             "bookmark_list": [
                 {
                     "dir": true,
+                    "name": "Device Storage",
+                    "path": "file:///storage/emulated/0/"
+                },
+                {
+                    "dir": true,
+                    "name": "Images",
+                    "path": "file:///storage/emulated/0/DCIM/"
+                },
+                {
+                    "dir": true,
+                    "name": "Music",
+                    "path": "file:///storage/emulated/0/Music/"
+                },
+                {
+                    "dir": true,
+                    "name": "Documents",
+                    "path": "file:///storage/emulated/0/"
+                },
+                {
+                    "dir": true,
+                    "name": "Downloads",
+                    "path": "file:///storage/emulated/0/Download/"
+                },
+                {
+                    "dir": true,
+                    "name": "Advanced Storage",
+                    "path": "file:///storage/"
+                },
+                {
+                    "dir": true,
                     "name": "Root",
                     "path": "file:///"
                 }
@@ -33,6 +63,14 @@ $(function () {
             "details_obj": {},
 
             "press_timer": 0,
+
+            "config_fields": [
+                "bookmark_list",
+                "show_path_detail",
+                "font_size",
+                "sort",
+                "sort_dirs"
+            ],
         },
         "methods": {
             "cordova": function (skip_history) {
@@ -67,7 +105,7 @@ $(function () {
                 this.history.push(this.path);
 
                 this.update_file_list(
-                    this.bookmark_list, "Home", skip_history
+                    this.bookmark_list, "Home", skip_history, true
                 );
 
                 this.loading = false;
@@ -89,24 +127,28 @@ $(function () {
                     this.mode = "dir";
                 }
             },
-            "update_file_list": function (files, path, skip_history) {
+            "update_file_list": function (
+                files, path, skip_history, skip_sort
+            ) {
                 var self = this;
 
-                if (this.sort) {
-                    files.sort(function (a, b) {
-                        return a.path > b.path;
-                    });
-                }
-                if (this.sort_dirs) {
-                    var dirs = files.filter(function (d) {
-                        return d.dir;
-                    });
-                    files.map(function (d) {
-                        if (!d.dir) {
-                            dirs.push(d);
-                        }
-                    });
-                    files = dirs;
+                if (!skip_sort) {
+                    if (this.sort) {
+                        files.sort(function (a, b) {
+                            return a.path > b.path;
+                        });
+                    }
+                    if (this.sort_dirs) {
+                        var dirs = files.filter(function (d) {
+                            return d.dir;
+                        });
+                        files.map(function (d) {
+                            if (!d.dir) {
+                                dirs.push(d);
+                            }
+                        });
+                        files = dirs;
+                    }
                 }
 
                 // calculate parent directory
@@ -744,7 +786,7 @@ $(function () {
                     var dirName  = parts.join("/");
 
                     if (!dir.dir) {
-						loadFile(
+                        loadFile(
                             dirName,
                             filename,
                             function (data) {
@@ -1117,9 +1159,48 @@ $(function () {
                     this.show_context = 0;
                 }
             },
+
+            // save entries as JSON strings
+            "save_config": function () {
+                if (typeof window.localStorage != "undefined") {
+                    var self   = this;
+                    var config = {};
+
+                    this.config_fields.map(function (field) {
+                        config[field] = self[field];
+                    });
+
+                    window.localStorage
+                        .setItem("config", JSON.stringify(config));
+                }
+            },
+
+            // load entries from JSON strings
+            "load_config": function () {
+                try {
+                    if (
+                        typeof window.localStorage != "undefined" &&
+                        typeof JSON != "undefined"
+                    ) {
+                        var self   = this;
+                        var config = JSON.parse(
+                            window.localStorage.getItem("config")
+                        );
+
+                        if (config != null) {
+                            this.config_fields.map(function (field) {
+                                self[field] = config[field];
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+            },
         },
     });
     window.app = app;
+    app.load_config();
 
     document.addEventListener("backbutton", function (e) {
         e.preventDefault();
@@ -1134,11 +1215,7 @@ $(function () {
             app.mode = "menu";
         }, false);
 
-        app.open({
-            "path": "file:///",
-            "dir":  true,
-            "name": "root",
-        });
+        app.home();
         app.history.pop();
     }, false);
 
