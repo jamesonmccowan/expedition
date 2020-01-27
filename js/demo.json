@@ -129,6 +129,24 @@
                                     "name": "0",
                                     "get": [
                                         {
+                                            "path": "file:///storage/emulated/0/test.notzip",
+                                            "dir":  false,
+                                            "name": "test.notzip",
+                                            "get": []
+                                        },
+                                        {
+                                            "path": "file:///storage/emulated/0/test.zip",
+                                            "dir":  false,
+                                            "name": "test.zip",
+                                            "get": []
+                                        },
+                                        {
+                                            "path": "file:///storage/emulated/0/test.ZIp",
+                                            "dir":  false,
+                                            "name": "test.ZIp",
+                                            "get": []
+                                        },
+                                        {
                                             "path": "file:///storage/emulated/0/Android/",
                                             "dir":  true,
                                             "name": "Android",

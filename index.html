@@ -39,23 +39,23 @@
                 <button class="button"
                     v-on:click="mode = 'menu'"
                 >Menu</button>
-                <!--
                 <div style="float: right; padding-right: 10px;">
                     <button class="button"
                         v-on:click="mode = 'help'"
                     >?</button>
                 </div>
-                -->
             </div>
 
             <div class="main" v-bind:style="{'font-size': font_size + 'rem'}">
-                {{ path }}
+                <div v-if="mode != 'settings' && mode != 'help'">
+                    {{ path }}
+                </div>
 
                 <div v-show="loading">Loading...</div>
 
                 <div class="error">{{ error_message }}</div>
 
-                <div v-if="mode != 'settings'">
+                <div v-if="mode != 'settings' && mode != 'help'">
                     <div v-for="dir in base" v-if="filter == '' || dir.name.indexOf(filter) != -1">
 
                         <label v-if="mode == 'select'" class="row">
@@ -86,10 +86,13 @@
                 </div>
 
                 <div v-if="mode == 'help'">
-                    <div style="text-align: left;">
+                    <div style="text-align: left; padding: 0px 5px;word-break: normal;">
                         <br>
                         <h2>Help</h2><br>
-                        There is no help
+                        <dl v-for="help in help_list">
+                            <dt><b>{{ help.title }}</b></dt>
+                            <dd>{{ help.description }}</dd>
+                        </dl>
                     </div>
                 </div>
 
@@ -235,7 +238,7 @@
                         <div v-on:click="copyMoveStart('copy_to_dir')" v-if="path.length > 0">Copy</div>
                         <div v-on:click="remove(selected)"             v-if="path.length > 0">Delete</div>
                         <div v-on:click="compress(selected)"           v-if="path.length > 0">Compress</div>
-                        <div v-on:click="extract(selected)"            v-if="path.length > 0 && !selected.dir">Extract</div>
+                        <div v-on:click="extract(selected)"            v-if="can_extract()"  >Extract</div>
                         <div v-on:click="add_bookmark(selected.path)"  v-if="path.length > 0">Bookmark</div>
                     </div>
 

@@ -5,6 +5,41 @@ $(function () {
             "mode": "dir",
             "path": "",
             "filter": "",
+            "help_list": [
+                {
+                    "title": "Why can I only extract .zip files?",
+                    "description": [
+                        "That's because we found a JavaScript",
+                        "library that can do .zip compression and",
+                        "extraction, but haven't gotten around to",
+                        "finding ways to support other archive",
+                        "formats. We might in the future if",
+                        "there's enough interest."
+                    ].join(" ")
+                },
+                {
+                    "title": [
+                        "How do I sort/edit the",
+                        "Home links/Bookmarks?"
+                    ].join(" "),
+                    "description": [
+                        "Open \"Settings\" from the Menu.",
+                        "Entries in the list of Bookmarks can be",
+                        "dragged to new positions in the list."
+                    ].join(" ")
+                },
+                {
+                    "title": "What are the Private App Directories?",
+                    "description": [
+                        "Android apps are given their own private",
+                        "directories only accessible to that app.",
+                        "These are directories normally only",
+                        "accessible to this specific app.",
+                        "Access these by clicking the icon at the",
+                        "top left of the screen."
+                    ].join(" ")
+                }
+            ],
             "base": [],
             "demo": {},
             "history": [],
@@ -89,11 +124,13 @@ $(function () {
                         }
                     });
                     this.update_file_list(
-                        files, "Cordova", skip_history
+                        files, "Private App Directories", skip_history
                     );
                 } catch (e) {
                     this.update_file_list(
-                        this.demo.home, "Cordova", skip_history
+                        this.demo.home,
+                        "Private App Directories",
+                        skip_history
                     );
                 }
 
@@ -787,6 +824,8 @@ $(function () {
                 var self = this;
                 var zip  = new JSZip();
                 var name = prompt(
+                    "Warning: compressing large files may cause " +
+                    "your device to crash or freeze!\n" +
                     "Choose a name for zip archive of \"" +
                     this.selected.name + "\"",
                     this.selected.name + ".zip"
@@ -959,6 +998,21 @@ $(function () {
                     }
                 } else {
                     this.show_context = 0;
+                }
+            },
+            "can_extract": function () {
+
+                // only files that end with .zip can be extracted
+                if (
+                    this.path.length > 0 &&
+                    (
+                        !this.selected.dir &&
+                        this.selected.name.match(/\.zip$/ig) !== null
+                    )
+                ) {
+                    return true;
+                } else {
+                    return false;
                 }
             },
             "extract": function () {
@@ -1158,8 +1212,12 @@ $(function () {
                 }
 
                 if (
-                    !this.selected.dir &&
-                    confirm("Extract \"" + this.selected.name + "\"?")
+                    this.can_extract() &&
+                    confirm(
+                        "Warning: extracting large files may cause " +
+                        "your device to crash or freeze!\n" +
+                        "Extract \"" + this.selected.name + "\"?"
+                    )
                 ) {
                     this.mode = "extracting";
                     this.compressing = this.selected.name;
