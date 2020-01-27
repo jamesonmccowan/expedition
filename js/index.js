@@ -162,11 +162,12 @@ $(function () {
                     });
                     this.show_context = 0;
                     this.mode = "dir";
+                    this.save_config();
                 }
             },
             "rename_bookmark": function (index) {
                 var name = prompt(
-                    "Creat New Bookmark",
+                    "Rename Bookmark",
                     this.bookmark_list[index].name
                 );
 
@@ -504,6 +505,36 @@ $(function () {
                     e.preventDefault();
                 }
             },
+            "shouldShowButton": function (button) {
+                var ret  = true;
+                var home = this.path === "Home";
+
+                switch (button) {
+                    case "Open":
+                    case "Details":
+                    case "Rename":
+                    case "Filter":
+                    case "Delete":
+                        // always available
+                        break;
+
+                    case "Move":
+                    case "Copy":
+                    case "Compress":
+                    case "Bookmark":
+                    case "Select":
+                    case "New Folder":
+                        // not available on home screen
+                        ret = !home;
+                        break;
+
+                    case "Extract":
+                        ret = this.can_extract() && !home;
+                        break;
+                }
+
+                return ret;
+            },
             "refresh": function () {
                 this.open({
                     "name": "refresh",
@@ -632,34 +663,41 @@ $(function () {
             "rename": function (dir) {
                 var self = this;
                 var name = prompt("Rename", dir.name);
+                var home = this.path === "Home";
 
                 if (name) {
-                    var rename = function (file, to, name) {
-                        file.moveTo(to, name,
-                            function () {
-                                self.refresh();
-                            },
-                            function (err) {
-                                self.error(err);
-                            }
-                        );
-                    };
+                    if (home) {
+                        dir.name = name;
+                        this.save_config();
+                    } else {
+                        var rename = function (file, to, name) {
+                            file.moveTo(to, name,
+                                function () {
+                                    self.refresh();
+                                },
+                                function (err) {
+                                    self.error(err);
+                                }
+                            );
+                        };
 
-                    var get_filesystem = function (path, callback) {
-                        window.resolveLocalFileSystemURL(
-                            path,
-                            callback,
-                            function (e) {
-                                self.error(e);
-                            }
-                        );
-                    };
+                        var get_filesystem =
+                            function (path, callback) {
+                                window.resolveLocalFileSystemURL(
+                                    path,
+                                    callback,
+                                    function (e) {
+                                        self.error(e);
+                                    }
+                                );
+                            };
 
-                    get_filesystem(dir.path, function (file) {
-                        get_filesystem(self.path, function (par) {
-                            rename(file, par, name);
+                        get_filesystem(dir.path, function (file) {
+                            get_filesystem(self.path, function (par) {
+                                rename(file, par, name);
+                            });
                         });
-                    });
+                    }
                 }
                 this.show_context = 0;
             },
@@ -778,6 +816,7 @@ $(function () {
             },
             "remove": function (dir) {
                 var self = this;
+                var home = this.path === "Home";
 
                 var dirs = [];
                 if (dir) {
@@ -791,29 +830,35 @@ $(function () {
                 }
 
                 dirs.map(function (dir) {
-                    self.selected = dir;
-                    if (confirm("Delete \"" + dir.name + "\"?")) {
-                        window.resolveLocalFileSystemURL(dir.path,
-                            function (fileSystem) {
-                                var success = function () {
-                                    self.refresh();
-                                };
-                                var failure = function (e) {
-                                    self.error(e);
-                                };
-
-                                if (dir.dir) {
-                                    fileSystem.removeRecursively(
-                                        success, failure
-                                    );
-                                } else {
-                                    fileSystem.remove(
-                                        success, failure
-                                    );
-                                }
-                            }
+                    if (home) {
+                        self.remove_bookmark(
+                            self.bookmark_list.indexOf(dir)
                         );
+                        self.home(); // refresh list on screen
+                    } else {
+                        self.selected = dir;
+                        if (confirm("Delete \"" + dir.name + "\"?")) {
+                            window.resolveLocalFileSystemURL(dir.path,
+                                function (fileSystem) {
+                                    var success = function () {
+                                        self.refresh();
+                                    };
+                                    var failure = function (e) {
+                                        self.error(e);
+                                    };
 
+                                    if (dir.dir) {
+                                        fileSystem.removeRecursively(
+                                            success, failure
+                                        );
+                                    } else {
+                                        fileSystem.remove(
+                                            success, failure
+                                        );
+                                    }
+                                }
+                            );
+                        }
                     }
                 });
 

@@ -61,7 +61,7 @@
                         <label v-if="mode == 'select'" class="row">
                             <input type="checkbox" v-model="dir.select">
 
-                            {{ dir.name + (dir.dir ? "/" : "") }<br>
+                            {{ dir.name + (dir.dir ? "/" : "") }}<br>
 
                             <span v-if="show_path_detail"
                                 v-bind:style="{'font-size': font_size + 'rem'}"
@@ -156,21 +156,26 @@
 
                 <table>
                     <tr v-if="mode == 'menu'">
-                        <td v-if="path.length > 0"
-                            v-on:click="mode = 'select'">
+                        <td v-if="shouldShowButton('Select')"
+                            v-on:click="mode = 'select'"
+                        >
                             Select
                         </td>
-                        <td v-on:click="mode = 'filter'; filter = ''">
+                        <td v-if="shouldShowButton('Filter')"
+                            v-on:click="mode = 'filter'; filter = ''"
+                        >
                             Filter
                         </td>
-                        <td v-if="path.length > 0"
+                        <td v-if="shouldShowButton('New Folder')"
                             v-on:click="newFolder()"
                         >
                             New Folder
                         </td>
                     </tr>
                     <tr v-if="mode == 'menu'">
-                        <td v-on:click="details()">
+                        <td v-if="shouldShowButton('Details')"
+                            v-on:click="details()"
+                        >
                             Details
                         </td>
                         <td>
@@ -193,13 +198,18 @@
                         </td>
                     </tr>
                     <tr v-if="mode == 'select' && path.length > 0">
-                        <td v-on:click="copyMoveStart('copy_to_dir')">
+                        <td v-if="shouldShowButton('Copy')"
+                            v-on:click="copyMoveStart('copy_to_dir')"
+                        >
                             Copy
                         </td>
-                        <td v-on:click="copyMoveStart('move_to_dir')">
+                        <td v-if="shouldShowButton('Move')"
+                            v-on:click="copyMoveStart('move_to_dir')"
+                        >
                             Move
                         </td>
-                        <td v-on:click="remove()">
+                        <td v-if="shouldShowButton('Delete')"
+                            v-on:click="remove()">
                             Delete
                         </td>
                     </tr>
@@ -231,15 +241,15 @@
                     </div>
 
                     <div class="buttons" v-if="mode == 'context'">
-                        <div v-on:click="open(selected)"                                     >Open</div>
-                        <div v-on:click="details(selected)"                                  >Details</div>
-                        <div v-on:click="rename(selected)"             v-if="path.length > 0">Rename</div>
-                        <div v-on:click="copyMoveStart('move_to_dir')" v-if="path.length > 0">Move</div>
-                        <div v-on:click="copyMoveStart('copy_to_dir')" v-if="path.length > 0">Copy</div>
-                        <div v-on:click="remove(selected)"             v-if="path.length > 0">Delete</div>
-                        <div v-on:click="compress(selected)"           v-if="path.length > 0">Compress</div>
-                        <div v-on:click="extract(selected)"            v-if="can_extract()"  >Extract</div>
-                        <div v-on:click="add_bookmark(selected.path)"  v-if="path.length > 0">Bookmark</div>
+                        <div v-on:click="open(selected)"               v-if="shouldShowButton('Open')"    >Open</div>
+                        <div v-on:click="details(selected)"            v-if="shouldShowButton('Details')" >Details</div>
+                        <div v-on:click="rename(selected)"             v-if="shouldShowButton('Rename')"  >Rename</div>
+                        <div v-on:click="copyMoveStart('move_to_dir')" v-if="shouldShowButton('Move')"    >Move</div>
+                        <div v-on:click="copyMoveStart('copy_to_dir')" v-if="shouldShowButton('Copy')"    >Copy</div>
+                        <div v-on:click="remove(selected)"             v-if="shouldShowButton('Delete')"  >Delete</div>
+                        <div v-on:click="compress(selected)"           v-if="shouldShowButton('Compress')">Compress</div>
+                        <div v-on:click="extract(selected)"            v-if="shouldShowButton('Extract')" >Extract</div>
+                        <div v-on:click="add_bookmark(selected.path)"  v-if="shouldShowButton('Bookmark')">Bookmark</div>
                     </div>
 
                     <div v-if="mode == 'compressing'">
