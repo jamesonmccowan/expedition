@@ -5,41 +5,6 @@ $(function () {
             "mode": "dir",
             "path": "",
             "filter": "",
-            "help_list": [
-                {
-                    "title": "Why can I only extract .zip files?",
-                    "description": [
-                        "That's because we found a JavaScript",
-                        "library that can do .zip compression and",
-                        "extraction, but haven't gotten around to",
-                        "finding ways to support other archive",
-                        "formats. We might in the future if",
-                        "there's enough interest."
-                    ].join(" ")
-                },
-                {
-                    "title": [
-                        "How do I sort/edit the",
-                        "Home links/Bookmarks?"
-                    ].join(" "),
-                    "description": [
-                        "Open \"Settings\" from the Menu.",
-                        "Entries in the list of Bookmarks can be",
-                        "dragged to new positions in the list."
-                    ].join(" ")
-                },
-                {
-                    "title": "What are the Private App Directories?",
-                    "description": [
-                        "Android apps are given their own private",
-                        "directories only accessible to that app.",
-                        "These are directories normally only",
-                        "accessible to this specific app.",
-                        "Access these by clicking the icon at the",
-                        "top left of the screen."
-                    ].join(" ")
-                }
-            ],
             "base": [],
             "demo": {},
             "history": [],
@@ -108,7 +73,7 @@ $(function () {
             ],
         },
         "methods": {
-            "cordova": function (skip_history) {
+            "internal": function (skip_history) {
                 this.history.push(this.path);
 
                 try {

@@ -4,15 +4,14 @@
         <meta charset="utf-8" />
         <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
         <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
-        <link rel="shortcut icon" href="img/logo.png" type="image/x-icon" />
-        <title>Cordova File Explorer</title>
+        <link rel="shortcut icon" href="img/icon.png" type="image/x-icon" />
+        <title>Expedition File Explorer</title>
 
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="lib/jquery-3.3.1.min.js"></script>
         <script type="text/javascript" src="lib/vue/vue.prod.js"></script>
         <script type="text/javascript" src="lib/vue/Sortable.min.js"></script>
         <script type="text/javascript" src="lib/vue/vuedraggable.umd.min.js"></script>
-
         <script type="text/javascript" src="lib/jszip.min.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
 
@@ -22,9 +21,7 @@
         <div id="app">
             <div class="header">
                 <div class="header_box">
-                    <img src="img/logo.png" alt="Cordova Icon"
-                        v-on:click="cordova()"
-                    />
+                    <img src="img/icon.png" alt="Expedition Icon" v-on:click="internal()" />
                 </div>
                 <button class="button"
                     v-on:click="home()"
@@ -85,15 +82,51 @@
                     </div>
                 </div>
 
-                <div v-if="mode == 'help'">
-                    <div style="text-align: left; padding: 0px 5px;word-break: normal;">
-                        <br>
-                        <h2>Help</h2><br>
-                        <dl v-for="help in help_list">
-                            <dt><b>{{ help.title }}</b></dt>
-                            <dd>{{ help.description }}</dd>
-                        </dl>
-                    </div>
+                <div v-if="mode == 'help'" class="helpscreen">
+                    <br>
+                    <h2>Help</h2><br>
+                    <dl>
+                        <dt><b>Why can I only extract .zip files?</b></dt>
+                        <dd>That's because we found a JavaScript
+                        library that can do .zip compression and
+                        extraction, but haven't gotten around to
+                        finding ways to support other archive
+                        formats. We might in the future if
+                        there's enough interest.</dd>
+                    </dl>
+                    <dl>
+                        <dt><b>How do I sort/edit the Home links/Bookmarks?</b></dt>
+                        <dd>Open "Settings" from the Menu.
+                        Entries in the list of Bookmarks can be
+                        dragged to new positions in the list.</dd>
+                    </dl>
+                    <dl>
+                        <dt><b>What are the Private App Directories?</b></dt>
+                        <dd>Android apps are given their own private
+                        directories only accessible to that app.
+                        These are directories normally only
+                        accessible to this specific app.
+                        Access these by clicking the icon at the
+                        top left of the screen.</dd>
+                    </dl>
+                    <dl>
+                        <dt><b>Who made this app?</b></dt>
+                        <dd>This app was made by
+                        <a href="https://ouroborosproductions.org/"
+                           v-on:click="open({'dir': false, 'path': 'https://ouroborosproductions.org/'}, true)"
+                        >OuroborosProductions.org</a>,
+                        a site that acts as a loose collection of programming projects.</dd>
+                    </dl>
+                    <dl>
+                        <dt><b>How was this made?</b></dt>
+                        <dd>This app was made using Apache Cordova to port a web page as
+                        an android app. The following JavaScript libraries are used:
+                        <ul>
+                            <li>Vue.js</li>
+                            <li>jQuery</li>
+                            <li>JSZip</li>
+                        </ul></dd>
+                    </dl>
                 </div>
 
                 <div v-if="mode == 'settings'">
@@ -179,7 +212,7 @@
                             Details
                         </td>
                         <td>
-                            Donate
+                            <!--Donate-->
                         </td>
                         <td v-on:click="mode = 'settings'">
                             Settings

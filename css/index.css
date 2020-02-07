@@ -174,11 +174,12 @@ table {
 .context .buttons div {
     padding: 10px 5px;
 }
-/*
-.context .buttons div:hover {
-    background: #09d;
+
+.helpscreen {
+    text-align: left;
+    padding: 0px 5px;
+    word-break: normal;
 }
-*/
 
 .bookmark {
     border-radius: 5px;
